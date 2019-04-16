@@ -1,11 +1,37 @@
+---
+title: "AssociationRuleAnalysis"
+author: "Zhichao Yuan(zxy180004)"
+date: "April 16, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Required Library
+
+We need following libraries
+
+```{r message=FALSE, warning=FALSE}
 require(readr)
 require(arules)
 require(dplyr)
+```
 
+# Preprocessing data
+
+First, We read data from file from original data file which is downloaded from kaggle. For the data file "order_products__train.csv", if we read the whole data, we cannot process it in the PC momery later, so we just use the first 20000 rows in the data.
+
+Then, we process and extract useful informations into transaction_product_data and transaction_department_data.
+
+Finally, we convert them to classes of transactions, product_as_transaction and department_as_transaction.
+
+```{r warning=FALSE}
 # preprocessing data
 
 # read data from file
-order_products_data<-read.csv("https://github.com/lypf2018/InstacartMarketBasketAnalysisKaggle/raw/master/dataset/order_products__train.csv", nrows=100000)
+order_products_data<-read.csv("https://github.com/lypf2018/InstacartMarketBasketAnalysisKaggle/raw/master/dataset/order_products__train.csv", nrows=20000)
 products_data<-read.csv("https://github.com/lypf2018/InstacartMarketBasketAnalysisKaggle/raw/master/dataset/products.csv")
 department_data<-read.csv("https://github.com/lypf2018/InstacartMarketBasketAnalysisKaggle/raw/master/dataset/departments.csv")
 
@@ -31,32 +57,44 @@ transaction_department_data <- split(department_analysis_data$department, depart
 product_as_transaction = as(transaction_product_data,"transactions")
 department_as_transaction = as(transaction_department_data,"transactions")
 
+```
 
 # Finding frequent itemsets and Association rules
 
+## 1. Frequent itemsets for products in orders dataset.
+```{r}
 # 1. Frequent itemsets for products in orders dataset.
 frequentItems <- eclat(product_as_transaction, parameter = list(supp = 0.07, maxlen = 15))
 inspect(frequentItems)
 # plot frequent itemsets for products
 itemFrequencyPlot(product_as_transaction, topN=10, type="absolute", main="Item Frequency")
+```
 
+## 2. Association rules for products in orders dataset.
+```{r}
 # 2. Association rules for products in orders dataset.
 rules <- apriori(product_as_transaction, parameter = list(supp = 0.001, conf = 0.5, maxlen=15))
 # 'high-confidence' rules.
 rules_conf <- sort(rules, by="confidence", decreasing=TRUE)
 # show the support, lift and confidence for all rules
 inspect(head(rules_conf))
+```
 
+## 3. Frequent itemsets for departments in orders dataset.
+```{r}
 # 3. Frequent itemsets for departments in orders dataset.
 frequentItems <- eclat(department_as_transaction, parameter = list(supp = 0.07, maxlen = 15))
 inspect(frequentItems)
 # plot frequent itemsets for products
 itemFrequencyPlot(department_as_transaction, topN=10, type="absolute", main="Item Frequency")
+```
 
+## 4. Association rules for departments in orders dataset.
+```{r}
 # 4. Association rules for departments in orders dataset.
 rules <- apriori(department_as_transaction, parameter = list(supp = 0.001, conf = 0.5, maxlen=15))
 # 'high-confidence' rules.
 rules_conf <- sort(rules, by="confidence", decreasing=TRUE)
 # show the support, lift and confidence for all rules
 inspect(head(rules_conf))
-
+```
